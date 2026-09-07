@@ -48,3 +48,5 @@ App will be available at `http://localhost:8080`.
 - [ ] Phase 4 — Async/events (ticket assignment, SLA breach notifications)
 - [ ] Phase 5 — Performance (caching, indexing)
 - [ ] Phase 6 — Full CI/CD (already scaffolded in Phase 1)
+=======
+# helpdesk-platform

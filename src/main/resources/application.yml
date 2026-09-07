@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: helpdesk-platform
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:helpdesk}
+    username: ${DB_USER:helpdesk}
+    password: ${DB_PASSWORD:helpdesk}
+
+  jpa:
+    hibernate:
+      ddl-auto: update # TODO: replace with Flyway migrations once schema stabilizes
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

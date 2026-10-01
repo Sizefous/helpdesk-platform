@@ -7,6 +7,7 @@ public record TenantRegistrationResponse(
         String companyName,
         String slug,
         UUID adminUserId,
-        String adminEmail
+        String adminEmail,
+        String token
 ) {
 }

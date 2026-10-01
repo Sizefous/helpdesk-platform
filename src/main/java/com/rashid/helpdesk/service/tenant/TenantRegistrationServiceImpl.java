@@ -8,7 +8,7 @@ import com.rashid.helpdesk.entity.User;
 import com.rashid.helpdesk.enums.Role;
 import com.rashid.helpdesk.repository.TenantRepository;
 import com.rashid.helpdesk.repository.UserRepository;
-
+import com.rashid.helpdesk.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,11 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class TenantRegistrationServiceImpl {
+public class TenantRegistrationServiceImpl implements TenantRegistrationService {
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Transactional
     public TenantRegistrationResponse register(TenantRegistrationRequest request) {
@@ -43,12 +44,20 @@ public class TenantRegistrationServiceImpl {
                 .build();
         admin = userRepository.save(admin);
 
+        String token = jwtService.generateToken(
+                admin.getId(),
+                tenant.getId(),
+                admin.getRole().name(),
+                admin.getEmail()
+        );
+
         return new TenantRegistrationResponse(
                 tenant.getId(),
                 tenant.getName(),
                 tenant.getSlug(),
                 admin.getId(),
-                admin.getEmail()
+                admin.getEmail(),
+                token
         );
     }
 }

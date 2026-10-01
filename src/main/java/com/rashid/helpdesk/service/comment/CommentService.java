@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface CommentService {
 
-    CommentResponse addComment(UUID tenantId, UUID ticketId, CommentCreateRequest request);
+    CommentResponse addComment(UUID tenantId, UUID ticketId, UUID authorUserId, CommentCreateRequest request);
 
     List<CommentResponse> listForTicket(UUID tenantId, UUID ticketId);
 }

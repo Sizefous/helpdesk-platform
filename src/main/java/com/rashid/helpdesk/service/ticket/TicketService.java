@@ -1,15 +1,15 @@
 package com.rashid.helpdesk.service.ticket;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.rashid.helpdesk.dto.TicketCreateRequest;
 import com.rashid.helpdesk.dto.TicketResponse;
 import com.rashid.helpdesk.enums.TicketStatus;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface TicketService {
-    
-    TicketResponse create(UUID tenantId, TicketCreateRequest request);
+
+    TicketResponse create(UUID tenantId, UUID createdByUserId, TicketCreateRequest request);
 
     List<TicketResponse> listForTenant(UUID tenantId);
 
@@ -18,5 +18,4 @@ public interface TicketService {
     TicketResponse assign(UUID tenantId, UUID ticketId, UUID agentUserId);
 
     TicketResponse updateStatus(UUID tenantId, UUID ticketId, TicketStatus status);
-
 }

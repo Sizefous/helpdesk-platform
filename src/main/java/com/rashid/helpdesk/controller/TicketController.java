@@ -1,23 +1,21 @@
 package com.rashid.helpdesk.controller;
 
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import com.rashid.helpdesk.dto.TicketAssignRequest;
 import com.rashid.helpdesk.dto.TicketCreateRequest;
 import com.rashid.helpdesk.dto.TicketResponse;
 import com.rashid.helpdesk.dto.TicketStatusUpdateRequest;
+import com.rashid.helpdesk.security.AuthenticatedUser;
 import com.rashid.helpdesk.service.ticket.TicketService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-// NOTE: tenant is read from X-Tenant-Id header as a temporary stand-in.
-// Phase 2 replaces this with tenant context derived from the authenticated JWT.
 @RestController
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
@@ -27,36 +25,37 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<TicketResponse> create(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @AuthenticationPrincipal AuthenticatedUser principal,
             @Valid @RequestBody TicketCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(tenantId, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ticketService.create(principal.tenantId(), principal.userId(), request));
     }
 
     @GetMapping
-    public List<TicketResponse> list(@RequestHeader("X-Tenant-Id") UUID tenantId) {
-        return ticketService.listForTenant(tenantId);
+    public List<TicketResponse> list(@AuthenticationPrincipal AuthenticatedUser principal) {
+        return ticketService.listForTenant(principal.tenantId());
     }
 
     @GetMapping("/{ticketId}")
     public TicketResponse get(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @AuthenticationPrincipal AuthenticatedUser principal,
             @PathVariable UUID ticketId) {
-        return ticketService.getForTenant(tenantId, ticketId);
+        return ticketService.getForTenant(principal.tenantId(), ticketId);
     }
 
     @PatchMapping("/{ticketId}/assign")
     public TicketResponse assign(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @AuthenticationPrincipal AuthenticatedUser principal,
             @PathVariable UUID ticketId,
             @Valid @RequestBody TicketAssignRequest request) {
-        return ticketService.assign(tenantId, ticketId, request.agentUserId());
+        return ticketService.assign(principal.tenantId(), ticketId, request.agentUserId());
     }
 
     @PatchMapping("/{ticketId}/status")
     public TicketResponse updateStatus(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @AuthenticationPrincipal AuthenticatedUser principal,
             @PathVariable UUID ticketId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
-        return ticketService.updateStatus(tenantId, ticketId, request.status());
+        return ticketService.updateStatus(principal.tenantId(), ticketId, request.status());
     }
 }

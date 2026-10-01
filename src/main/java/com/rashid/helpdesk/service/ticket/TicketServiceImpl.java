@@ -28,12 +28,13 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final TicketMapper ticketMapper;
 
+    @Override
     @Transactional
-    public TicketResponse create(UUID tenantId, TicketCreateRequest request) {
+    public TicketResponse create(UUID tenantId, UUID createdByUserId, TicketCreateRequest request) {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new NotFoundException("Tenant not found"));
 
-        User createdBy = userRepository.findById(request.createdByUserId())
+        User createdBy = userRepository.findById(createdByUserId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         Ticket ticket = Ticket.builder()

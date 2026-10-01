@@ -28,11 +28,11 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponse addComment(UUID tenantId, UUID ticketId, CommentCreateRequest request) {
+    public CommentResponse addComment(UUID tenantId, UUID ticketId, UUID authorUserId, CommentCreateRequest request) {
         Ticket ticket = ticketRepository.findByIdAndTenantId(ticketId, tenantId)
                 .orElseThrow(() -> new NotFoundException("Ticket not found"));
 
-        User author = userRepository.findById(request.authorUserId())
+        User author = userRepository.findById(authorUserId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         Comment comment = Comment.builder()

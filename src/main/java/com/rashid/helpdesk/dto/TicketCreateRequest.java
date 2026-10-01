@@ -1,15 +1,10 @@
 package com.rashid.helpdesk.dto;
 
+import com.rashid.helpdesk.enums.TicketPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.UUID;
-import com.rashid.helpdesk.enums.TicketPriority;
-
 
 public record TicketCreateRequest(
-
-        @NotNull
-        UUID createdByUserId,
 
         @NotBlank
         String subject,

@@ -1,5 +1,8 @@
 package com.rashid.helpdesk.enums;
 
-public class TicketPriority {
-    
+public enum TicketPriority {
+    LOW,
+    MEDIUM,
+    HIGH,
+    URGENT
 }

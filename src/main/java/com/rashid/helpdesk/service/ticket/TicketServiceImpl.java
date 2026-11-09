@@ -1,11 +1,13 @@
 package com.rashid.helpdesk.service.ticket;
 
+import com.rashid.helpdesk.common.BadRequestException;
 import com.rashid.helpdesk.common.NotFoundException;
 import com.rashid.helpdesk.dto.TicketCreateRequest;
 import com.rashid.helpdesk.dto.TicketResponse;
 import com.rashid.helpdesk.entity.Tenant;
 import com.rashid.helpdesk.entity.Ticket;
 import com.rashid.helpdesk.entity.User;
+import com.rashid.helpdesk.enums.Role;
 import com.rashid.helpdesk.enums.TicketStatus;
 import com.rashid.helpdesk.mapper.TicketMapper;
 import com.rashid.helpdesk.repository.TenantRepository;
@@ -63,11 +65,17 @@ public class TicketServiceImpl implements TicketService {
         return ticketMapper.toResponse(ticket);
     }
 
+    @Override
     @Transactional
     public TicketResponse assign(UUID tenantId, UUID ticketId, UUID agentUserId) {
         Ticket ticket = findTicketOrThrow(tenantId, ticketId);
-        User agent = userRepository.findById(agentUserId)
+
+        User agent = userRepository.findByIdAndTenantId(agentUserId, tenantId)
                 .orElseThrow(() -> new NotFoundException("Agent not found"));
+
+        if (agent.getRole() != Role.AGENT && agent.getRole() != Role.ADMIN) {
+            throw new BadRequestException("Only agents and admins can be assigned to tickets");
+        }
 
         ticket.setAssignedAgent(agent);
         return ticketMapper.toResponse(ticket);

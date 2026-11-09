@@ -1,5 +1,6 @@
 package com.rashid.helpdesk.service.ticket;
 
+import com.rashid.helpdesk.common.BadRequestException;
 import com.rashid.helpdesk.common.NotFoundException;
 import com.rashid.helpdesk.dto.TicketCreateRequest;
 import com.rashid.helpdesk.dto.TicketResponse;
@@ -176,7 +177,7 @@ class TicketServiceImplTest {
     @Test
     void assign_validTicketAndAgent_setsAssignedAgent() {
         when(ticketRepository.findByIdAndTenantId(ticket.getId(), tenant.getId())).thenReturn(Optional.of(ticket));
-        when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
+          when(userRepository.findByIdAndTenantId(agent.getId(), tenant.getId())).thenReturn(Optional.of(agent));
         when(ticketMapper.toResponse(ticket)).thenAnswer(inv -> responseFor(ticket));
 
         TicketResponse result = service.assign(tenant.getId(), ticket.getId(), agent.getId());
@@ -199,7 +200,7 @@ class TicketServiceImplTest {
     @Test
     void assign_unknownAgent_throwsNotFoundAndLeavesTicketUnassigned() {
         when(ticketRepository.findByIdAndTenantId(ticket.getId(), tenant.getId())).thenReturn(Optional.of(ticket));
-        when(userRepository.findById(agent.getId())).thenReturn(Optional.empty());
+        when(userRepository.findByIdAndTenantId(agent.getId(), tenant.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.assign(tenant.getId(), ticket.getId(), agent.getId()))
                 .isInstanceOf(NotFoundException.class);
@@ -228,5 +229,31 @@ class TicketServiceImplTest {
                 .isInstanceOf(NotFoundException.class);
 
         assertThat(ticket.getStatus()).isEqualTo(TicketStatus.OPEN);
+    }
+
+
+    @Test
+    void assign_agentFromAnotherTenant_throwsNotFoundUsingTenantScopedLookup() {
+        when(ticketRepository.findByIdAndTenantId(ticket.getId(), tenant.getId())).thenReturn(Optional.of(ticket));
+        // a scoped lookup finds nothing for a user who belongs to a different tenant
+        when(userRepository.findByIdAndTenantId(agent.getId(), tenant.getId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.assign(tenant.getId(), ticket.getId(), agent.getId()))
+                .isInstanceOf(NotFoundException.class);
+
+        assertThat(ticket.getAssignedAgent()).isNull();
+        // guards against regressing to the unscoped lookup
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void assign_customerAsAssignee_throwsBadRequestAndLeavesTicketUnassigned() {
+        when(ticketRepository.findByIdAndTenantId(ticket.getId(), tenant.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findByIdAndTenantId(customer.getId(), tenant.getId())).thenReturn(Optional.of(customer));
+
+        assertThatThrownBy(() -> service.assign(tenant.getId(), ticket.getId(), customer.getId()))
+                .isInstanceOf(BadRequestException.class);
+
+        assertThat(ticket.getAssignedAgent()).isNull();
     }
 }

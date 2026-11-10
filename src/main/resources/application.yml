@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # TODO: replace with Flyway migrations once schema stabilizes
+      ddl-auto: validate # replace with 'update' for development, 'validate' for production
     open-in-view: false
     properties:
       hibernate:

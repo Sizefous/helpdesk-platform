@@ -2,7 +2,9 @@ package com.rashid.helpdesk.service.ticket;
 
 import com.rashid.helpdesk.common.BadRequestException;
 import com.rashid.helpdesk.common.NotFoundException;
+import com.rashid.helpdesk.dto.PageResponse;
 import com.rashid.helpdesk.dto.TicketCreateRequest;
+import com.rashid.helpdesk.dto.TicketFilter;
 import com.rashid.helpdesk.dto.TicketResponse;
 import com.rashid.helpdesk.entity.Tenant;
 import com.rashid.helpdesk.entity.Ticket;
@@ -12,9 +14,13 @@ import com.rashid.helpdesk.enums.TicketStatus;
 import com.rashid.helpdesk.mapper.TicketMapper;
 import com.rashid.helpdesk.repository.TenantRepository;
 import com.rashid.helpdesk.repository.TicketRepository;
+import com.rashid.helpdesk.repository.TicketSpecifications;
 import com.rashid.helpdesk.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,5 +97,13 @@ public class TicketServiceImpl implements TicketService {
     private Ticket findTicketOrThrow(UUID tenantId, UUID ticketId) {
         return ticketRepository.findByIdAndTenantId(ticketId, tenantId)
                 .orElseThrow(() -> new NotFoundException("Ticket not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<TicketResponse> search(UUID tenantId, TicketFilter filter, Pageable pageable) {
+        Page<Ticket> page = ticketRepository.findAll(
+                TicketSpecifications.matching(tenantId, filter), pageable);
+        return PageResponse.from(page.map(ticketMapper::toResponse));
     }
 }

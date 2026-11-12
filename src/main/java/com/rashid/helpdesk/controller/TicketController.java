@@ -1,19 +1,27 @@
 package com.rashid.helpdesk.controller;
 
+import com.rashid.helpdesk.common.PageRequests;
+import com.rashid.helpdesk.dto.PageResponse;
 import com.rashid.helpdesk.dto.TicketAssignRequest;
 import com.rashid.helpdesk.dto.TicketCreateRequest;
+import com.rashid.helpdesk.dto.TicketFilter;
 import com.rashid.helpdesk.dto.TicketResponse;
 import com.rashid.helpdesk.dto.TicketStatusUpdateRequest;
+import com.rashid.helpdesk.enums.TicketPriority;
+import com.rashid.helpdesk.enums.TicketStatus;
 import com.rashid.helpdesk.security.AuthenticatedUser;
 import com.rashid.helpdesk.service.ticket.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -57,5 +65,23 @@ public class TicketController {
             @PathVariable UUID ticketId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
         return ticketService.updateStatus(principal.tenantId(), ticketId, request.status());
+    }
+
+        private static final Set<String> SORTABLE_FIELDS = Set.of("createdAt", "updatedAt");
+
+    @GetMapping
+    public PageResponse<TicketResponse> list(
+            @AuthenticationPrincipal AuthenticatedUser principal,
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) UUID assignedAgentId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        TicketFilter filter = new TicketFilter(status, priority, assignedAgentId, q);
+        Pageable pageable = PageRequests.of(page, size, sortBy, direction, SORTABLE_FIELDS);
+        return ticketService.search(principal.tenantId(), filter, pageable);
     }
 }

@@ -27,6 +27,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.rashid.helpdesk.dto.PageResponse;
+import com.rashid.helpdesk.dto.TicketFilter;
+import org.mockito.ArgumentMatchers;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import static org.mockito.ArgumentMatchers.eq;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -126,27 +137,42 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any());
     }
 
-    // ---- listForTenant ----
+    // ---- search ----
 
     @Test
-    void listForTenant_returnsMappedTicketsInRepositoryOrder() {
+    void search_returnsMappedPageWithPagingMetadata() {
+        Pageable pageable = PageRequest.of(0, 20);
         Ticket second = TestData.ticket(tenant, customer);
-        when(ticketRepository.findByTenantId(tenant.getId())).thenReturn(List.of(ticket, second));
+        TicketFilter filter = new TicketFilter(TicketStatus.OPEN, null, null, null);
+        when(ticketRepository.findAll(ArgumentMatchers.<Specification<Ticket>>any(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(ticket, second), pageable, 45));
         when(ticketMapper.toResponse(ticket)).thenReturn(responseFor(ticket));
         when(ticketMapper.toResponse(second)).thenReturn(responseFor(second));
 
-        List<TicketResponse> result = service.listForTenant(tenant.getId());
+        PageResponse<TicketResponse> result = service.search(tenant.getId(), filter, pageable);
 
-        assertThat(result)
+        assertThat(result.content())
                 .extracting(TicketResponse::id)
                 .containsExactly(ticket.getId(), second.getId());
+        assertThat(result.page()).isZero();
+        assertThat(result.size()).isEqualTo(20);
+        assertThat(result.totalElements()).isEqualTo(45);
+        assertThat(result.totalPages()).isEqualTo(3);
     }
 
     @Test
-    void listForTenant_noTickets_returnsEmptyList() {
-        when(ticketRepository.findByTenantId(tenant.getId())).thenReturn(List.of());
+    void search_noMatches_returnsEmptyPageWithoutMapping() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(ticketRepository.findAll(ArgumentMatchers.<Specification<Ticket>>any(), eq(pageable)))
+                .thenReturn(Page.empty(pageable));
 
-        assertThat(service.listForTenant(tenant.getId())).isEmpty();
+        PageResponse<TicketResponse> result =
+                service.search(tenant.getId(), new TicketFilter(null, null, null, null), pageable);
+
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+        assertThat(result.totalPages()).isZero();
+        verifyNoInteractions(ticketMapper);
     }
 
     // ---- getForTenant ----

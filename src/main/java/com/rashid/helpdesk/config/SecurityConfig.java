@@ -1,6 +1,8 @@
 package com.rashid.helpdesk.config;
 
 import com.rashid.helpdesk.security.JwtAuthenticationFilter;
+import com.rashid.helpdesk.security.RestAuthenticationEntryPoint;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+        private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/tickets/**").authenticated()
                         .anyRequest().authenticated()
                 )
+
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
                 // Insert our filter to run before Spring's default username/password filter.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

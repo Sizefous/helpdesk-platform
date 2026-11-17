@@ -59,13 +59,6 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponse> listForTenant(UUID tenantId) {
-        return ticketRepository.findByTenantId(tenantId).stream()
-                .map(ticketMapper::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public TicketResponse getForTenant(UUID tenantId, UUID ticketId) {
         Ticket ticket = findTicketOrThrow(tenantId, ticketId);
         return ticketMapper.toResponse(ticket);

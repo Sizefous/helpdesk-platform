@@ -15,8 +15,6 @@ public interface TicketService {
 
     TicketResponse create(UUID tenantId, UUID createdByUserId, TicketCreateRequest request);
 
-    List<TicketResponse> listForTenant(UUID tenantId);
-
     TicketResponse getForTenant(UUID tenantId, UUID ticketId);
 
     TicketResponse assign(UUID tenantId, UUID ticketId, UUID agentUserId);

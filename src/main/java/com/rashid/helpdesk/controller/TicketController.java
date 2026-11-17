@@ -39,11 +39,6 @@ public class TicketController {
                 .body(ticketService.create(principal.tenantId(), principal.userId(), request));
     }
 
-    @GetMapping
-    public List<TicketResponse> list(@AuthenticationPrincipal AuthenticatedUser principal) {
-        return ticketService.listForTenant(principal.tenantId());
-    }
-
     @GetMapping("/{ticketId}")
     public TicketResponse get(
             @AuthenticationPrincipal AuthenticatedUser principal,

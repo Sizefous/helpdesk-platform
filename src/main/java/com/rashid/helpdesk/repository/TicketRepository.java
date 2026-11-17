@@ -11,7 +11,5 @@ import java.util.UUID;
 
 public interface TicketRepository extends JpaRepository<Ticket, UUID>, JpaSpecificationExecutor<Ticket> {
 
-    List<Ticket> findByTenantId(UUID tenantId);
-
     Optional<Ticket> findByIdAndTenantId(UUID id, UUID tenantId);
 }
